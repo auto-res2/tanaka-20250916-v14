@@ -38,10 +38,19 @@ class SACTTrainer(Trainer):
 class LASERTrainer(SACTTrainer):
     """Implementation of the LASER loss as described in the original experiment."""
 
-    def __init__(self, *a, M: int = 8, tau: float = 2.0, **kw):
-        super().__init__(*a, **kw)
+    def __init__(self, *a, M: int = 8, tau: float = 2.0, outer_freq: int = 500, lambda_: float = 0.1, 
+                 seed: int = 13, max_steps: int = 14000, report_to: str = 'none', **kw):
+        laser_params = {'outer_freq', 'lambda_', 'seed', 'max_steps', 'report_to', 'M', 'tau'}
+        trainer_kw = {k: v for k, v in kw.items() if k not in laser_params}
+        
+        super().__init__(*a, **trainer_kw)
         self.M = M
         self.tau = tau
+        self.outer_freq = outer_freq
+        self.lambda_ = lambda_
+        self.seed = seed
+        self.max_steps = max_steps
+        self.report_to = report_to
         # Spectrum parameter living on the simplex via softmax
         self.spec = torch.nn.Parameter(torch.full((M,), 1.0 / M))
         # Contextual gate projection will be initialized after we know the hidden size
@@ -53,9 +62,10 @@ class LASERTrainer(SACTTrainer):
 
     def soft_rank(self, x: torch.Tensor) -> torch.Tensor:
         """NeuralSort: differentiable approximation of argsort/rank (Cuturi & Blondel 2020)."""
-        diff = x.unsqueeze(-1) - x.unsqueeze(0)  # pair-wise differences
+        x_flat = x.flatten()
+        diff = x_flat.unsqueeze(-1) - x_flat.unsqueeze(0)  # pair-wise differences
         P = torch.softmax(-diff / self.tau, dim=-1)  # doubly-stochastic permutation matrix
-        K = torch.arange(1, x.numel() + 1, device=x.device, dtype=torch.float32)
+        K = torch.arange(1, x_flat.numel() + 1, device=x_flat.device, dtype=torch.float32)
         return P @ K
 
     def spectral_risk(self, losses: torch.Tensor) -> torch.Tensor:
@@ -64,11 +74,18 @@ class LASERTrainer(SACTTrainer):
         In practice we use equally-spaced quantiles q_j of the (optionally gated)
         per-token loss distribution.  The spectrum w is learned (softmax of `spec`)."""
 
-        _ = self.soft_rank(losses)  # ranks are not explicitly used but keep the op for autograd
-        q_bins = [torch.quantile(losses, 1 - (k + 1) / self.M) for k in range(self.M)]
+        losses_flat = losses.flatten()
+        _ = self.soft_rank(losses_flat)  # ranks are not explicitly used but keep the op for autograd
+        
+        if losses_flat.numel() < self.M:
+            mean_loss = losses_flat.mean()
+            q_bins = [mean_loss for _ in range(self.M)]
+        else:
+            q_bins = [torch.quantile(losses_flat, 1 - (k + 1) / self.M) for k in range(self.M)]
+        
         q = torch.stack(q_bins)
-        w = torch.softmax(self.spec.to(losses.device), dim=-1)
-        return (w.to(losses.device) * q).sum()
+        w = torch.softmax(self.spec.to(losses_flat.device), dim=-1)
+        return (w.to(losses_flat.device) * q).sum()
 
     # ------------------------------------------------------------------
     #  Loss used by HF Trainer
@@ -104,7 +121,9 @@ class LASERTrainer(SACTTrainer):
         if self.gate_proj is not None:
             h_masked = h_masked.to(next(self.gate_proj.parameters()).device)
         gates = 1 + 4 * torch.sigmoid(self.gate_proj(h_masked).squeeze(-1))
-        risk = self.spectral_risk(gates * losses) / self.alpha
+        
+        gated_losses = gates * losses
+        risk = self.spectral_risk(gated_losses) / self.alpha
         loss = risk + 0.1 * losses.mean()  # blended with mean-loss for stability
 
         return (loss, out) if return_outputs else loss
@@ -191,7 +210,7 @@ def get_trainer(
 
 
 def save_metrics(metrics: Dict, save_dir: Path, tag: str) -> None:
-    """Persist metrics to .research/iteration3 and also pretty-print to stdout."""
+    """Persist metrics to .research/iteration7 and also pretty-print to stdout."""
     save_dir.mkdir(parents=True, exist_ok=True)
     file_path = save_dir / f"{tag}.json"
     with file_path.open("w") as fp:
