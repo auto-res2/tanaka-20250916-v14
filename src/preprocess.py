@@ -10,7 +10,16 @@ def load_and_tokenise(dataset_name: str, tokenizer_name: str, split: str = "trai
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
 
     def _tok(batch):
-        return tokenizer(batch["text"], truncation=True, max_length=1024)
+        if "text" in batch:
+            texts = batch["text"]
+        elif "prompt" in batch and isinstance(batch["prompt"][0], dict):
+            texts = [item["text"] for item in batch["prompt"]]
+        else:
+            raise ValueError(f"Cannot find text field in batch. Available keys: {list(batch.keys())}")
+        
+        tokenized = tokenizer(texts, truncation=True, max_length=128, padding=True)
+        tokenized["labels"] = tokenized["input_ids"].copy()
+        return tokenized
 
     tokenised = raw.map(_tok, batched=True, remove_columns=raw.column_names)
     tokenised.set_format(type="torch")

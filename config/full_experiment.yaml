@@ -1,5 +1,5 @@
 # Full experimental configuration mirroring the paper’s Exp-1 Toxicity run
-model: "meta-llama/Llama-2-7b-hf"
+model: "RichardErkhov/nayem-ng_-_mdjannatulnayem_llama2_7b_finetuned_casuallm_lora-4bits"
 dataset: "allenai/real-toxicity-prompts"
 training_args:
   output_dir: "checkpoints/full"
@@ -11,7 +11,7 @@ training_args:
   warmup_steps: 200
   lr_scheduler_type: "cosine"
   logging_steps: 50
-  evaluation_strategy: "steps"
+  eval_strategy: "steps"
   eval_steps: 500
   save_strategy: "steps"
   save_steps: 500

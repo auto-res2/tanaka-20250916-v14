@@ -10,7 +10,9 @@ from transformers import (
     AutoTokenizer,
     Trainer,
     TrainingArguments,
+    BitsAndBytesConfig,
 )
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
 
 # -----------------------------------------------------------------------------
@@ -41,9 +43,9 @@ class LASERTrainer(SACTTrainer):
         self.M = M
         self.tau = tau
         # Spectrum parameter living on the simplex via softmax
-        self.register_parameter("spec", torch.nn.Parameter(torch.full((M,), 1.0 / M)))
-        # Contextual gate projection (one-layer MLP without bias)
-        self.gate_proj = torch.nn.Linear(self.model.config.hidden_size, 1, bias=False)
+        self.spec = torch.nn.Parameter(torch.full((M,), 1.0 / M))
+        # Contextual gate projection will be initialized after we know the hidden size
+        self.gate_proj = None
 
     # ---------------------------------------------------------------------
     #  Core LASER functions
@@ -72,7 +74,7 @@ class LASERTrainer(SACTTrainer):
     #  Loss used by HF Trainer
     # ------------------------------------------------------------------
 
-    def compute_loss(self, model, inputs, return_outputs=False):  # noqa: D401 – signature fixed by HF
+    def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):  # noqa: D401 – signature fixed by HF
         labels = inputs.pop("labels")
         out = model(**inputs, output_hidden_states=True)
 
@@ -88,8 +90,13 @@ class LASERTrainer(SACTTrainer):
         lp = lp.masked_fill(mask, 0.0)
         losses = (-lp)[~mask]  # token-level NLL
 
+        if self.gate_proj is None:
+            hidden_size = h.shape[-1]
+            self.gate_proj = torch.nn.Linear(hidden_size, 1, bias=False).to(h.device)
+
         # Contextual gate multiplies losses
-        gates = 1 + 4 * torch.sigmoid(self.gate_proj(h)[~mask])
+        h_masked = h[~mask]
+        gates = 1 + 4 * torch.sigmoid(self.gate_proj(h_masked).squeeze(-1))
         risk = self.spectral_risk(gates * losses) / self.alpha
         loss = risk + 0.1 * losses.mean()  # blended with mean-loss for stability
 
@@ -108,16 +115,41 @@ class LASERTrainer(SACTTrainer):
 #  Utility functions used by src.main
 # -----------------------------------------------------------------------------
 
-def build_model_and_tokenizer(model_name: str, hf_token: str = None):
+def build_model_and_tokenizer(model_name: str, hf_token: str | None = None):
     """Load model & tokenizer in 4-bit LoRA mode if specified in the name."""
-    auth = True if hf_token else False
-    tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=auth)
+    auth = hf_token if hf_token else None
+    tokenizer = AutoTokenizer.from_pretrained(model_name, token=auth)
+    
+    bnb_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+    )
+    
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        load_in_4bit=True,
+        token=auth,
+        quantization_config=bnb_config,
         device_map="auto",
-        use_auth_token=auth,
     )
+    
+    model = prepare_model_for_kbit_training(model)
+    
+    lora_config = LoraConfig(
+        r=64,
+        lora_alpha=16,
+        target_modules=["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        lora_dropout=0.1,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+    
+    model = get_peft_model(model, lora_config)
+    
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    
     return model, tokenizer
 
 
@@ -144,7 +176,7 @@ def get_trainer(
 
 
 def save_metrics(metrics: Dict, save_dir: Path, tag: str) -> None:
-    """Persist metrics to .research/iteration1 and also pretty-print to stdout."""
+    """Persist metrics to .research/iteration2 and also pretty-print to stdout."""
     save_dir.mkdir(parents=True, exist_ok=True)
     file_path = save_dir / f"{tag}.json"
     with file_path.open("w") as fp:
