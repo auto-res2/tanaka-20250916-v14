@@ -63,9 +63,13 @@ class LASERTrainer(SACTTrainer):
     def soft_rank(self, x: torch.Tensor) -> torch.Tensor:
         """NeuralSort: differentiable approximation of argsort/rank (Cuturi & Blondel 2020)."""
         x_flat = x.flatten()
+        n = x_flat.numel()
+        if n == 0:
+            return torch.tensor([], device=x_flat.device, dtype=torch.float32)
+        
         diff = x_flat.unsqueeze(-1) - x_flat.unsqueeze(0)  # pair-wise differences
         P = torch.softmax(-diff / self.tau, dim=-1)  # doubly-stochastic permutation matrix
-        K = torch.arange(1, x_flat.numel() + 1, device=x_flat.device, dtype=torch.float32)
+        K = torch.arange(1, n + 1, device=x_flat.device, dtype=torch.float32)
         return P @ K
 
     def spectral_risk(self, losses: torch.Tensor) -> torch.Tensor:
@@ -79,13 +83,15 @@ class LASERTrainer(SACTTrainer):
         
         if losses_flat.numel() < self.M:
             mean_loss = losses_flat.mean()
-            q_bins = [mean_loss for _ in range(self.M)]
+            w = torch.softmax(self.spec.to(losses_flat.device), dim=-1)
+            return mean_loss * w.sum()
         else:
-            q_bins = [torch.quantile(losses_flat, 1 - (k + 1) / self.M) for k in range(self.M)]
-        
-        q = torch.stack(q_bins)
-        w = torch.softmax(self.spec.to(losses_flat.device), dim=-1)
-        return (w.to(losses_flat.device) * q).sum()
+            w = torch.softmax(self.spec.to(losses_flat.device), dim=-1)
+            risk_sum = torch.tensor(0.0, device=losses_flat.device, dtype=losses_flat.dtype)
+            for k in range(self.M):
+                quantile_val = torch.quantile(losses_flat, 1 - (k + 1) / self.M)
+                risk_sum = risk_sum + w[k] * quantile_val
+            return risk_sum
 
     # ------------------------------------------------------------------
     #  Loss used by HF Trainer
