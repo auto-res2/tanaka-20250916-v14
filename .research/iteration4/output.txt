@@ -1,0 +1,59 @@
+=== [PHASE 2/2] Full experiment start Tue Sep 16 12:10:22 PM UTC 2025 ===
+============================================================
+STARTING LASER EXPERIMENT: SMOKE_TEST
+============================================================
+Model: gpt2
+Dataset: jasonkrone/real-toxicity-prompts-10k-sample
+LASER Hyperparameters: {'alpha': 0.05, 'M': 4, 'tau': 2.0}
+Training Arguments: {'output_dir': 'tmp/smoke', 'max_steps': 1, 'per_device_train_batch_size': 1, 'per_device_eval_batch_size': 1, 'gradient_accumulation_steps': 1, 'save_total_limit': 1, 'logging_steps': 1, 'eval_strategy': 'no', 'dataloader_num_workers': 0, 'fp16': False, 'gradient_checkpointing': False, 'remove_unused_columns': False}
+============================================================
+{'loss': 179.3748, 'grad_norm': 3307.39453125, 'learning_rate': 5e-05, 'epoch': 0.1}
+{'train_runtime': 5.9174, 'train_samples_per_second': 0.169, 'train_steps_per_second': 0.169, 'train_loss': 179.3748016357422, 'epoch': 0.1}
+============================================================
+EXPERIMENT SMOKE_TEST COMPLETED
+============================================================
+NUMERICAL RESULTS:
+  eval_loss: 0.0
+  eval_runtime: 0.0
+  eval_samples_per_second: 0.0
+Results saved to: .research/iteration3/smoke_test.json
+Images directory: .research/iteration3/images
+============================================================
+===== smoke_test metrics =====
+{
+  "eval_loss": 0.0,
+  "eval_runtime": 0.0,
+  "eval_samples_per_second": 0.0,
+  "experiment_tag": "smoke_test",
+  "model_name": "gpt2",
+  "dataset_name": "jasonkrone/real-toxicity-prompts-10k-sample",
+  "laser_hyperparams": {
+    "alpha": 0.05,
+    "M": 4,
+    "tau": 2.0
+  },
+  "training_config": {
+    "output_dir": "tmp/smoke",
+    "max_steps": 1,
+    "per_device_train_batch_size": 1,
+    "per_device_eval_batch_size": 1,
+    "gradient_accumulation_steps": 1,
+    "save_total_limit": 1,
+    "logging_steps": 1,
+    "eval_strategy": "no",
+    "dataloader_num_workers": 0,
+    "fp16": false,
+    "gradient_checkpointing": false,
+    "remove_unused_columns": false
+  },
+  "output_directory": ".research/iteration3",
+  "images_directory": ".research/iteration3/images"
+}
+============================================================
+STARTING LASER EXPERIMENT: FULL_EXPERIMENT
+============================================================
+Model: RichardErkhov/nayem-ng_-_mdjannatulnayem_llama2_7b_finetuned_casuallm_lora-4bits
+Dataset: allenai/real-toxicity-prompts
+LASER Hyperparameters: {'alpha': 0.05, 'M': 8, 'tau': 2.0, 'outer_freq': 500, 'lambda_': 0.1, 'seed': 13, 'max_steps': 14000, 'report_to': 'none'}
+Training Arguments: {'output_dir': 'checkpoints/full', 'num_train_epochs': 1, 'per_device_train_batch_size': 4, 'per_device_eval_batch_size': 4, 'gradient_accumulation_steps': 4, 'learning_rate': '2e-4', 'warmup_steps': 200, 'lr_scheduler_type': 'cosine', 'logging_steps': 50, 'eval_strategy': 'steps', 'eval_steps': 500, 'save_strategy': 'steps', 'save_steps': 500, 'save_total_limit': 2, 'fp16': False}
+============================================================
