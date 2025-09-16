@@ -1,0 +1,17 @@
+# Minimal config that finishes in a few minutes on one A100
+model: "meta-llama/Llama-2-7b-hf"
+dataset: "jasonkrone/real-toxicity-prompts-10k-sample"
+training_args:
+  output_dir: "tmp/smoke"
+  num_train_epochs: 1
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 1
+  gradient_accumulation_steps: 1
+  save_total_limit: 1
+  logging_steps: 10
+  evaluation_strategy: "no"
+  fp16: false
+laser_hyperparams:
+  alpha: 0.05
+  M: 4
+  tau: 2.0

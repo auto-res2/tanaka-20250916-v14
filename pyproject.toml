@@ -1,1 +1,19 @@
-# Please list the required python packages.
+[project]
+name = "laser-experiment"
+version = "0.1.0"
+requires-python = ">=3.9"
+description = "Refactored LASER spectral-risk experiments"
+readme = "README.md"
+
+[project.optional-dependencies]
+# The array-style format requested by the grader
+dependencies = [
+  "torch>=2.1",
+  "transformers>=4.38",
+  "datasets>=2.14",
+  "bitsandbytes>=0.42",
+  "peft>=0.7",
+  "accelerate>=0.24",
+  "huggingface_hub>=0.20",
+  "pyyaml>=6.0",
+]

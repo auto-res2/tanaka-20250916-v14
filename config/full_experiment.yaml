@@ -1,0 +1,28 @@
+# Full experimental configuration mirroring the paper’s Exp-1 Toxicity run
+model: "meta-llama/Llama-2-7b-hf"
+dataset: "allenai/real-toxicity-prompts"
+training_args:
+  output_dir: "checkpoints/full"
+  num_train_epochs: 1
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 4
+  learning_rate: 2e-4
+  warmup_steps: 200
+  lr_scheduler_type: "cosine"
+  logging_steps: 50
+  evaluation_strategy: "steps"
+  eval_steps: 500
+  save_strategy: "steps"
+  save_steps: 500
+  save_total_limit: 2
+  fp16: false  # A100 supports bf16/fp16; disable here for simplicity
+laser_hyperparams:
+  alpha: 0.05
+  M: 8
+  tau: 2.0
+  outer_freq: 500
+  lambda_: 0.1
+  seed: 13
+  max_steps: 14000
+  report_to: "none"
