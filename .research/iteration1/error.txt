@@ -1,0 +1,10 @@
+Using CPython 3.11.13
+Creating virtual environment at: .venv
+Resolved 71 packages in 703ms
+Audited in 0.00ms
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/toma/pt80-1-a-28/_work/tanaka-20250916-v14/tanaka-20250916-v14/src/main.py", line 6, in <module>
+    import yaml
+ModuleNotFoundError: No module named 'yaml'
