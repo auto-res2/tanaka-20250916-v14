@@ -3,5 +3,37 @@
   "queries": [
     "LLM fine-tuning loss",
     "novel loss function LLM"
+  ],
+  "research_study_list": [
+    {
+      "title": "When Scaling Meets LLM Finetuning: The Effect of Data, Model and Finetuning Method"
+    },
+    {
+      "title": "Revisiting Zeroth-Order Optimization for Memory-Efficient LLM Fine-Tuning: A Benchmark"
+    },
+    {
+      "title": "PV-Tuning: Beyond Straight-Through Estimation for Extreme LLM Compression"
+    },
+    {
+      "title": "PV-Tuning: Beyond Straight-Through Estimation for Extreme LLM Compression"
+    },
+    {
+      "title": "Preference Fine-Tuning of LLMs Should Leverage Suboptimal, On-Policy Data"
+    },
+    {
+      "title": "Discovering Preference Optimization Algorithms with and for Large Language Models"
+    },
+    {
+      "title": "Language Generation with Strictly Proper Scoring Rules"
+    },
+    {
+      "title": "Beyond MLE: Convex Learning for Text Generation"
+    },
+    {
+      "title": "Model Alignment as Prospect Theoretic Optimization"
+    },
+    {
+      "title": "Risk-Averse Fine-tuning of Large Language Models"
+    }
   ]
 }
