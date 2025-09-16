@@ -8,6 +8,10 @@ def load_and_tokenise(dataset_name: str, tokenizer_name: str, split: str = "trai
     """Load a HF dataset and tokenize it for causal-LM training."""
     raw = load_dataset(dataset_name, split=split)
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+    
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.pad_token_id = tokenizer.eos_token_id
 
     def _tok(batch):
         if "text" in batch:
