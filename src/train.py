@@ -226,7 +226,7 @@ def get_trainer(
 
 
 def save_metrics(metrics: Dict, save_dir: Path, tag: str) -> None:
-    """Persist metrics to .research/iteration7 and also pretty-print to stdout."""
+    """Persist metrics to .research/iteration8 and also pretty-print to stdout."""
     save_dir.mkdir(parents=True, exist_ok=True)
     file_path = save_dir / f"{tag}.json"
     with file_path.open("w") as fp:

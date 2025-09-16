@@ -13,7 +13,7 @@ from .train import get_trainer, save_metrics
 # -----------------------------------------------------------------------------
 
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
-RESEARCH_DIR = Path(".research/iteration7")
+RESEARCH_DIR = Path(".research/iteration8")
 
 
 def load_config(config_path: Path) -> Dict:
