@@ -21,7 +21,13 @@ def load_and_tokenise(dataset_name: str, tokenizer_name: str, split: str = "trai
         else:
             raise ValueError(f"Cannot find text field in batch. Available keys: {list(batch.keys())}")
         
-        tokenized = tokenizer(texts, truncation=True, max_length=128, padding=True)
+        tokenized = tokenizer(
+            texts, 
+            truncation=True, 
+            max_length=128, 
+            padding="max_length",  # Force consistent length
+            return_tensors=None  # Let datasets handle tensor conversion
+        )
         tokenized["labels"] = tokenized["input_ids"].copy()
         return tokenized
 

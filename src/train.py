@@ -11,6 +11,7 @@ from transformers import (
     Trainer,
     TrainingArguments,
     BitsAndBytesConfig,
+    DataCollatorForLanguageModeling,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
@@ -108,8 +109,10 @@ class LASERTrainer(SACTTrainer):
         labels_shift = labels[:, 1:]
         mask = labels_shift.eq(-100)
 
-        # Gather log-probs of the true next token
-        lp = logp.gather(-1, labels_shift.unsqueeze(-1)).squeeze(-1)
+        # Gather log-probs of the true next token, but only for valid labels
+        valid_labels = labels_shift.clone()
+        valid_labels[mask] = 0  # Replace -100 with 0 for gathering
+        lp = logp.gather(-1, valid_labels.unsqueeze(-1)).squeeze(-1)
         lp = lp.masked_fill(mask, 0.0)
         losses = (-lp)[~mask]  # token-level NLL
 
@@ -198,14 +201,21 @@ def get_trainer(
 ) -> LASERTrainer:
     """Factory that wires together datasets, HF TrainingArguments, and LASER hyper-params."""
 
-    model, _ = build_model_and_tokenizer(model_name, os.getenv("HF_TOKEN"))
+    model, tokenizer = build_model_and_tokenizer(model_name, os.getenv("HF_TOKEN"))
 
     args = TrainingArguments(**training_args)
+    data_collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer,
+        mlm=False,
+        pad_to_multiple_of=8,
+    )
+    
     trainer = LASERTrainer(
         model=model,
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
         args=args,
+        data_collator=data_collator,
         **laser_hp,
     )
     
