@@ -1,0 +1,29 @@
+{
+  "eval_loss": 0.0,
+  "eval_runtime": 0.0,
+  "eval_samples_per_second": 0.0,
+  "experiment_tag": "smoke_test",
+  "model_name": "gpt2",
+  "dataset_name": "jasonkrone/real-toxicity-prompts-10k-sample",
+  "laser_hyperparams": {
+    "alpha": 0.05,
+    "M": 4,
+    "tau": 2.0
+  },
+  "training_config": {
+    "output_dir": "tmp/smoke",
+    "max_steps": 1,
+    "per_device_train_batch_size": 1,
+    "per_device_eval_batch_size": 1,
+    "gradient_accumulation_steps": 1,
+    "save_total_limit": 1,
+    "logging_steps": 1,
+    "eval_strategy": "no",
+    "dataloader_num_workers": 0,
+    "fp16": false,
+    "gradient_checkpointing": false,
+    "remove_unused_columns": false
+  },
+  "output_directory": ".research/iteration8",
+  "images_directory": ".research/iteration8/images"
+}

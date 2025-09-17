@@ -1,0 +1,39 @@
+{
+  "eval_loss": 46.64604187011719,
+  "eval_runtime": 1314.7427,
+  "eval_samples_per_second": 7.564,
+  "eval_steps_per_second": 1.892,
+  "epoch": 1.0,
+  "experiment_tag": "full_experiment",
+  "model_name": "RichardErkhov/nayem-ng_-_mdjannatulnayem_llama2_7b_finetuned_casuallm_lora-4bits",
+  "dataset_name": "allenai/real-toxicity-prompts",
+  "laser_hyperparams": {
+    "alpha": 0.05,
+    "M": 8,
+    "tau": 2.0,
+    "outer_freq": 500,
+    "lambda_": 0.1,
+    "seed": 13,
+    "max_steps": 14000,
+    "report_to": "none"
+  },
+  "training_config": {
+    "output_dir": "checkpoints/full",
+    "num_train_epochs": 1,
+    "per_device_train_batch_size": 4,
+    "per_device_eval_batch_size": 4,
+    "gradient_accumulation_steps": 4,
+    "learning_rate": 0.0002,
+    "warmup_steps": 200,
+    "lr_scheduler_type": "cosine",
+    "logging_steps": 50,
+    "eval_strategy": "steps",
+    "eval_steps": 500,
+    "save_strategy": "steps",
+    "save_steps": 500,
+    "save_total_limit": 2,
+    "fp16": false
+  },
+  "output_directory": ".research/iteration8",
+  "images_directory": ".research/iteration8/images"
+}
